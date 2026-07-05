@@ -549,7 +549,7 @@ show_user_info() {
             return 1
         fi
 
-        sleep 0.2
+        sleep 1
     done
 
     if [ -z "$user_info" ]; then
