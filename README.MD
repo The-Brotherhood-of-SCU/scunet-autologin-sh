@@ -38,7 +38,7 @@
 └── README.MD
 ```
 
-> 脚本文件名只能为 `scunet_login.sh`。
+> 建议保留主脚本文件名 `scunet_login.sh`；如果在 OpenWrt/procd 中改名运行，脚本也会正常启动。
 
 ## 依赖环境
 
@@ -241,6 +241,7 @@ sh /root/scunet_login.sh
 ```
 
 如果要长期运行，建议使用 `procd`、`screen`、`tmux` 或者放入你自己的守护脚本中。
+使用 `procd` 时请让脚本作为前台进程运行；脚本如果立刻退出，即使退出码为 `0`，也会被 procd 反复拉起并显示 crash loop。
 
 不建议直接用普通 cron 每分钟启动一次，因为本脚本本身是长期循环运行的程序，重复启动可能造成多个实例同时登录。
 

@@ -635,9 +635,7 @@ check_dependencies() {
     fi
 }
 
-script_name=$(basename "$0")
-if [ "$script_name" = "scunet_login.sh" ] || \
-   [ "$0" = "${0%/*}/scunet_login.sh.sh" ]; then
+if [ "${SCUNET_LOGIN_NO_MAIN:-0}" != "1" ]; then
     check_dependencies
 
     if ! init_temp_files; then
