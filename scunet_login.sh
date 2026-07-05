@@ -7,7 +7,7 @@
 MAIN_URL="http://192.168.2.135/"
 USERID="" # Set your campus network username here or in the config file.
 PASSWORD="" # Set your campus network password here or in the config file.
-MAX_ATTEMPTS_ALLOWED=5
+MAX_ATTEMPTS_ALLOWED=0
 SERVICE="EDUNET"
 PING_HOST="223.5.5.5"
 PING_ATTEMPTS=5
@@ -391,7 +391,7 @@ autologin() {
     service_code=$(get_service_code)
     retry_count=1
 
-    while [ "$retry_count" -le "$MAX_ATTEMPTS_ALLOWED" ]; do
+    while login_attempts_remaining "$retry_count"; do
         final_login_url=$(get_redirect_url)
         if [ $? -ne 0 ]; then
             handle_connection_error "$retry_count"
@@ -479,17 +479,37 @@ autologin() {
     return 1
 }
 
+login_attempts_remaining() {
+    retry_count="$1"
+    max_attempts="${MAX_ATTEMPTS_ALLOWED:-0}"
+
+    if [ "$max_attempts" = "0" ]; then
+        return 0
+    fi
+
+    [ "$retry_count" -le "$max_attempts" ]
+}
+
+login_attempt_limit_label() {
+    if [ "${MAX_ATTEMPTS_ALLOWED:-0}" = "0" ]; then
+        printf 'unlimited\n'
+    else
+        printf '%s\n' "${MAX_ATTEMPTS_ALLOWED:-0}"
+    fi
+}
+
 handle_connection_error() {
     retry_count="$1"
     countdown=15
+    attempt_limit=$(login_attempt_limit_label)
 
     while [ "$countdown" -ge 0 ]; do
-        printf "\r\033[1;91m[Network error]\033[0m Login interface request failed. Check the WLAN connection. Retrying in %d seconds: attempt (%d/%d)" \
-               "$countdown" "$retry_count" "$MAX_ATTEMPTS_ALLOWED" >&2
+        printf "\r\033[1;91m[Network error]\033[0m Login interface request failed. Check the WLAN connection. Retrying in %d seconds: attempt (%d/%s)" \
+               "$countdown" "$retry_count" "$attempt_limit" >&2
         sleep 1
         countdown=$((countdown - 1))
     done
-    printf "\rStarting retry attempt (%d/%d)\n" "$retry_count" "$MAX_ATTEMPTS_ALLOWED" >&2
+    printf "\rStarting retry attempt (%d/%s)\n" "$retry_count" "$attempt_limit" >&2
 }
 
 show_user_info() {

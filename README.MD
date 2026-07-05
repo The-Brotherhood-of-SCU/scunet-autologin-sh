@@ -35,6 +35,7 @@
 .
 ├── scunet_login.sh       # 主脚本
 ├── scunet_config.conf       # 配置文件，需要自己编辑
+├── examples/openwrt-init.d/scunet-login       # OpenWrt init.d 示例
 └── README.MD
 ```
 
@@ -104,7 +105,7 @@ PING_ATTEMPTS="10"
 PING_TIMEOUT="1"
 PING_INTERVAL="1"
 HEALTHY_LOG_INTERVAL="300"
-MAX_ATTEMPTS_ALLOWED="5"
+MAX_ATTEMPTS_ALLOWED="0"
 EOF
 ```
 
@@ -147,7 +148,7 @@ scunet_config.conf
 | `PING_TIMEOUT` | 单次 ping 超时时间，单位通常为秒 | `1` |
 | `PING_INTERVAL` | 两次 ping 之间的间隔 | `1` |
 | `HEALTHY_LOG_INTERVAL` | 网络正常时日志打印间隔，单位秒；设为 `0` 可恢复每轮打印 | `300` |
-| `MAX_ATTEMPTS_ALLOWED` | 登录失败后的最大重试次数 | `5` |
+| `MAX_ATTEMPTS_ALLOWED` | 登录失败后的最大重试次数；设为 `0` 表示无限重试 | `0` |
 
 ### SERVICE 可选值
 
@@ -172,7 +173,7 @@ PING_ATTEMPTS="10"
 PING_TIMEOUT="1"
 PING_INTERVAL="1"
 HEALTHY_LOG_INTERVAL="300"
-MAX_ATTEMPTS_ALLOWED="5"
+MAX_ATTEMPTS_ALLOWED="0"
 ```
 
 
@@ -242,6 +243,21 @@ sh /root/scunet_login.sh
 
 如果要长期运行，建议使用 `procd`、`screen`、`tmux` 或者放入你自己的守护脚本中。
 使用 `procd` 时请让脚本作为前台进程运行；脚本如果立刻退出，即使退出码为 `0`，也会被 procd 反复拉起并显示 crash loop。
+
+仓库里提供了一个 OpenWrt `init.d` 示例，可以按需调整脚本路径后安装：
+
+```sh
+cp examples/openwrt-init.d/scunet-login /etc/init.d/scunet-login
+chmod +x /etc/init.d/scunet-login
+/etc/init.d/scunet-login enable
+/etc/init.d/scunet-login start
+```
+
+查看日志：
+
+```sh
+logread -f -e scunet-login
+```
 
 不建议直接用普通 cron 每分钟启动一次，因为本脚本本身是长期循环运行的程序，重复启动可能造成多个实例同时登录。
 
